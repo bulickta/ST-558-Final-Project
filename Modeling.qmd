@@ -1,0 +1,83 @@
+---
+title: "Modeling"
+author: "Thomas Bulick"
+date: "29 July 2024"
+format: html
+editor: visual
+---
+
+## Introduction
+```{r setup, include=FALSE}
+library(tidyverse)
+library(caret)
+```
+This is modeling of diabetes data from the Behavioral Risk Factor Surveillance System, a health-related telephone survey run annually by the CDC. This data specifically is from 2015, and contains 22 variables including:
+
+-   Diabetes_binary - Indicator variable for 0 = No diabetes, 1 = Diabetes
+-   HighBP - Indicator variable for high blood pressure
+-   HighChol - Indicator variable for high cholesterol
+-   CholCheck - Indicator variable for a cholesterol check in the last 5 years
+-   BMI - Calculated BMI
+-   Smoker - Indicator variable for lifetime smoking at least 100 cigarettes
+-   Stroke - Indicator variable for ever having a strokee
+-   HeartDiseaseorAttack - Indicator variable for ever having heart disease or a heart attack
+-   PhysActivity - Indicator variable for physical (non-job related) activity in the last 30 days
+-   Fruits - Indicator variable for consuming fruit at least once a day
+-   Veggies - Indicator variable for consuming vegetables at least once a day
+-   HvyAlcoholConsump - Indicator variable for heavy alcohol consumption defined as \>14 drinks per week for men or \>7 drinks per week for women
+-   AnyHealthcare - Indicator variable for any level of health care coverage/health insurance
+-   NoDocbcCost - Indicator variable for whether the individual neeeded to see a doctor but did not due to cost in the last 12 months
+-   GenHlth - Self rating of general health from 1 = excellent to 5 = poor
+-   MentHlth - Self reporting of number of poor mental health days in the past 30 days
+-   PhysHlth - Self reporting of number of poor physical health days in the past 30 days
+-   DiffWalk - Indicator variable for difficulty walking or climbing stairs
+-   Sex - Indicator variable for sex, 0 = female and 1 = male
+-   Age - Ages grouped according to:
+    -   1 = Age 18 to 24
+    -   2 = Age 25 to 29
+    -   3 = Age 30 to 34
+    -   4 = Age 35 to 39
+    -   5 = Age 40 to 44
+    -   6 = Age 45 to 49
+    -   7 = Age 50 to 54
+    -   8 = Age 55 to 59
+    -   9 = Age 60 to 64
+    -   10 = Age 65 to 69
+    -   11 = Age 70 to 74
+    -   12 = Age 75 to 79
+    -   13 = Age 80 or older
+-   Education - Level of education scale corresponding to:
+    -   1 = No school or only Kindergarten
+    -   2 = Elementary Education
+    -   3 = Some High School
+    -   4 = High School Graduate
+    -   5 = Some College or Technical School
+    -   6 = College Graduate
+-   Income - Level of Income corresponding to:
+    -   1 = Less than \$10,000
+    -   2 = Between \$10,000 and \$15,000
+    -   3 = Between \$15,000 and \$20,000
+    -   4 = Between \$20,000 and \$25,000
+    -   5 = Between \$25,000 and \$35,000
+    -   6 = Between \$35,000 and \$50,000
+    -   7 = Between \$50,000 and \$75,000
+    -   8 = Above \$75,000
+    
+The goal of this modeling is to create the most effective model according to the log loss metric, using cross-validation. 
+
+As a note, log loss in an alternative metric to accuracy for evaluating binary response/classification models. Mathematically, log loss is the negative log of thee likelihood function, and generally allows for more uncertainty in predictions by penalizing a model more heavily for being confident in an incorrect prediction, e.g., if a model incorrectly predicted with 90% probability an individual had diabetes and a different incorrectly predicted with 51% probability an individual had diabetes, the accuracy metric would consider these equivalent situations in terms of model evaluation, but log loss would choose the second model as, even though both were incorrect, the probability was less certain in the second case. Generally speaking, this allows for selecting a more conservative model, and is helpful in scenarios where the misclassification cost is even, i.e., if a person has diabetes but is misdiagnosed as non-diabetic the effect of misdiagnosis is quite high and could lead to loss of life expectancy due to no implementation of life style changes, versus if a person is non-diabetic and is misclassified as diabetic that individual would likely make lifestyle changes that would not harm them significantly moving forward, so misclassifying as non-diabetic is significantly worse than misclassifying as diabetic
+
+```{r}
+data <- read.csv("~/diabetes_binary_health_indicators_BRFSS2015.csv") |>
+  mutate(Diabetes_binary = factor(Diabetes_binary,labels=c("No Diabetes","Diabetes")),HighBP=factor(HighBP,labels=c("Normal","High")),HighChol=factor(HighChol,labels=c("Normal","High")),CholCheck=factor(CholCheck,labels=c("No","Yes")),Smoker=factor(Smoker,labels=c("No","Yes")),Stroke=factor(Stroke,labels=c("No","Yes")),HeartDiseaseorAttack=factor(HeartDiseaseorAttack,labels=c("No","Yes")),PhysActivity=factor(PhysActivity,labels=c("No","Yes")),Fruits=factor(Fruits,labels=c("No","Yes")),Veggies=factor(Veggies,labels=c("No","Yes")),HvyAlcoholConsump=factor(HvyAlcoholConsump,labels=c("No","Yes")),AnyHealthcare=factor(AnyHealthcare,labels=c("No","Yes")),NoDocbcCost=factor(NoDocbcCost,labels=c("No","Yes")),GenHlth=factor(GenHlth,labels=c("Excellent","Very Good","Good","Fair","Poor")),DiffWalk=factor(DiffWalk,labels=c("No","Yes")),Sex=factor(Sex,labels=c("Female","Male")),Age=factor(Age,labels=c("18-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75-79","80 and older")),Education=factor(Education,labels=c("No school/Kindergarten","Elementary Education","Some High School","High School Graduate","Some College or Technical School","College Graduate")),Income=factor(Income,labels=c("Under $10k","$10k-$15k","$15k-$20k","$20k-$25k","$25k-$35k","$35k-$50k","$50k-$75k","Over $75k")))
+
+set.seed(28)
+
+```
+
+
+
+
+
+
+

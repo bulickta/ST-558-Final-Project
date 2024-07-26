@@ -1,0 +1,112 @@
+---
+title: "EDA"
+author: "Thomas Bulick"
+date: "29 July 2024"
+format: html
+editor: visual
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggpubr)
+```
+
+## Introduction
+
+This is exploratory data analysis of diabetes data from the Behavioral Risk Factor Surveillance System, a health-related telephone survey run annually by the CDC. This data specifically is from 2015, and contains 22 variables including:
+
+-   Diabetes_binary - Indicator variable for 0 = No diabetes, 1 = Diabetes
+-   HighBP - Indicator variable for high blood pressure
+-   HighChol - Indicator variable for high cholesterol
+-   CholCheck - Indicator variable for a cholesterol check in the last 5 years
+-   BMI - Calculated BMI
+-   Smoker - Indicator variable for lifetime smoking at least 100 cigarettes
+-   Stroke - Indicator variable for ever having a strokee
+-   HeartDiseaseorAttack - Indicator variable for ever having heart disease or a heart attack
+-   PhysActivity - Indicator variable for physical (non-job related) activity in the last 30 days
+-   Fruits - Indicator variable for consuming fruit at least once a day
+-   Veggies - Indicator variable for consuming vegetables at least once a day
+-   HvyAlcoholConsump - Indicator variable for heavy alcohol consumption defined as \>14 drinks per week for men or \>7 drinks per week for women
+-   AnyHealthcare - Indicator variable for any level of health care coverage/health insurance
+-   NoDocbcCost - Indicator variable for whether the individual neeeded to see a doctor but did not due to cost in the last 12 months
+-   GenHlth - Self rating of general health from 1 = excellent to 5 = poor
+-   MentHlth - Self reporting of number of poor mental health days in the past 30 days
+-   PhysHlth - Self reporting of number of poor physical health days in the past 30 days
+-   DiffWalk - Indicator variable for difficulty walking or climbing stairs
+-   Sex - Indicator variable for sex, 0 = female and 1 = male
+-   Age - Ages grouped according to:
+    -   1 = Age 18 to 24
+    -   2 = Age 25 to 29
+    -   3 = Age 30 to 34
+    -   4 = Age 35 to 39
+    -   5 = Age 40 to 44
+    -   6 = Age 45 to 49
+    -   7 = Age 50 to 54
+    -   8 = Age 55 to 59
+    -   9 = Age 60 to 64
+    -   10 = Age 65 to 69
+    -   11 = Age 70 to 74
+    -   12 = Age 75 to 79
+    -   13 = Age 80 or older
+-   Education - Level of education scale corresponding to:
+    -   1 = No school or only Kindergarten
+    -   2 = Elementary Education
+    -   3 = Some High School
+    -   4 = High School Graduate
+    -   5 = Some College or Technical School
+    -   6 = College Graduate
+-   Income - Level of Income corresponding to:
+    -   1 = Less than \$10,000
+    -   2 = Between \$10,000 and \$15,000
+    -   3 = Between \$15,000 and \$20,000
+    -   4 = Between \$20,000 and \$25,000
+    -   5 = Between \$25,000 and \$35,000
+    -   6 = Between \$35,000 and \$50,000
+    -   7 = Between \$50,000 and \$75,000
+    -   8 = Above \$75,000
+    
+The goal of this EDA is to determine any potential variables that appear to be related to our binary diabetes response variable.
+
+## Data Summarization and Exploration
+
+After reading in the raw data and assigning the indicator variables as meaningful factors, we check and see there are no instances of missing data in this data set.
+```{r}
+
+data <- read.csv("~/diabetes_binary_health_indicators_BRFSS2015.csv") |>
+  mutate(Diabetes_binary = factor(Diabetes_binary,labels=c("No Diabetes","Diabetes")),HighBP=factor(HighBP,labels=c("Normal","High")),HighChol=factor(HighChol,labels=c("Normal","High")),CholCheck=factor(CholCheck,labels=c("No","Yes")),Smoker=factor(Smoker,labels=c("No","Yes")),Stroke=factor(Stroke,labels=c("No","Yes")),HeartDiseaseorAttack=factor(HeartDiseaseorAttack,labels=c("No","Yes")),PhysActivity=factor(PhysActivity,labels=c("No","Yes")),Fruits=factor(Fruits,labels=c("No","Yes")),Veggies=factor(Veggies,labels=c("No","Yes")),HvyAlcoholConsump=factor(HvyAlcoholConsump,labels=c("No","Yes")),AnyHealthcare=factor(AnyHealthcare,labels=c("No","Yes")),NoDocbcCost=factor(NoDocbcCost,labels=c("No","Yes")),GenHlth=factor(GenHlth,labels=c("Excellent","Very Good","Good","Fair","Poor")),DiffWalk=factor(DiffWalk,labels=c("No","Yes")),Sex=factor(Sex,labels=c("Female","Male")),Age=factor(Age,labels=c("18-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75-79","80 and older")),Education=factor(Education,labels=c("No school/Kindergarten","Elementary Education","Some High School","High School Graduate","Some College or Technical School","College Graduate")),Income=factor(Income,labels=c("Under $10k","$10k-$15k","$15k-$20k","$20k-$25k","$25k-$35k","$35k-$50k","$50k-$75k","Over $75k")))
+
+colSums(is.na(data))
+```
+Computing some brief summary statistics, we note that, generally speaking, there are relatively few cases of diabetics compared to non-diabetics, and we can also see some distributions of common demographic information like education, income, age, and sex.
+```{r}
+summary(data)
+```
+We then create some exploratory plots comparing the distributions of all variables compared to our response, noting some potential variable of interest in high blood pressure, high cholesterol, smoker, general health, education, income, BMI, and Physical Health, based on how each of these count variables appears to change the regular proportions expected across a large number of non-diabetics and a smaller number of diabetics, and how each of the numeric variables appears to be shifted in distribution.
+```{r}
+gg<-ggplot(data,aes(x=Diabetes_binary))
+b <- gg+geom_count(aes(y=HighBP))+labs(x="Diabetes")
+c <- gg+geom_count(aes(y=HighChol))+labs(x="Diabetes")
+d <- gg+geom_count(aes(y=Smoker))+labs(x="Diabetes")
+e <- gg+geom_count(aes(y=Stroke))+labs(x="Diabetes")
+f <- gg+geom_count(aes(y=HeartDiseaseorAttack))+labs(x="Diabetes")
+g <- gg+geom_count(aes(y=PhysActivity))+labs(x="Diabetes")
+h <- gg+geom_count(aes(y=Fruits))+labs(x="Diabetes")
+i <- gg+geom_count(aes(y=Veggies))+labs(x="Diabetes")
+j <- gg+geom_count(aes(y=HvyAlcoholConsump))+labs(x="Diabetes")
+k <- gg+geom_count(aes(y=AnyHealthcare))+labs(x="Diabetes")
+l <- gg+geom_count(aes(y=NoDocbcCost))+labs(x="Diabetes")
+m <- gg+geom_count(aes(y=GenHlth))+labs(x="Diabetes")
+n <- gg+geom_count(aes(y=DiffWalk))+labs(x="Diabetes")
+o <- gg+geom_count(aes(y=Sex))+labs(x="Diabetes")
+p <- gg+geom_count(aes(y=Age))+labs(x="Diabetes")
+q <- gg+geom_count(aes(y=Education))+labs(x="Diabetes")
+r <- gg+geom_count(aes(y=Income))+labs(x="Diabetes")
+s <- gg+geom_boxplot(aes(y=BMI,fill=Diabetes_binary))+labs(x="Diabetes")
+t <- gg+geom_boxplot(aes(y=MentHlth,fill=Diabetes_binary))+labs(x="Diabetes")
+u <- gg+geom_boxplot(aes(y=PhysHlth,fill=Diabetes_binary))+labs(x="Diabetes")
+
+ggarrange(b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,ncol=2,nrow=2)
+
+```
+
+[Click here for the Modeling Page](Modeling.html)
