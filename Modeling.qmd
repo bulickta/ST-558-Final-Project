@@ -10,6 +10,8 @@ editor: visual
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(caret)
+library(ModelMetrics)
+library(randomForest)
 ```
 This is modeling of diabetes data from the Behavioral Risk Factor Surveillance System, a health-related telephone survey run annually by the CDC. This data specifically is from 2015, and contains 22 variables including:
 
@@ -65,13 +67,92 @@ This is modeling of diabetes data from the Behavioral Risk Factor Surveillance S
     
 The goal of this modeling is to create the most effective model according to the log loss metric, using cross-validation. 
 
-As a note, log loss in an alternative metric to accuracy for evaluating binary response/classification models. Mathematically, log loss is the negative log of thee likelihood function, and generally allows for more uncertainty in predictions by penalizing a model more heavily for being confident in an incorrect prediction, e.g., if a model incorrectly predicted with 90% probability an individual had diabetes and a different incorrectly predicted with 51% probability an individual had diabetes, the accuracy metric would consider these equivalent situations in terms of model evaluation, but log loss would choose the second model as, even though both were incorrect, the probability was less certain in the second case. Generally speaking, this allows for selecting a more conservative model, and is helpful in scenarios where the misclassification cost is even, i.e., if a person has diabetes but is misdiagnosed as non-diabetic the effect of misdiagnosis is quite high and could lead to loss of life expectancy due to no implementation of life style changes, versus if a person is non-diabetic and is misclassified as diabetic that individual would likely make lifestyle changes that would not harm them significantly moving forward, so misclassifying as non-diabetic is significantly worse than misclassifying as diabetic
+As a note, log loss in an alternative metric to accuracy for evaluating binary response/classification models. Mathematically, log loss is the negative log of the likelihood function, and as such accounts for more uncertainty in predictions by penalizing a model more heavily for being confident in an incorrect prediction, e.g., if a model incorrectly predicted with 90% probability an individual had diabetes and a different incorrectly predicted with 51% probability an individual had diabetes, the accuracy metric would consider these equivalent situations in terms of model evaluation, but log loss would choose the second model as, even though both were incorrect, the probability was less certain in the second case. Generally speaking, this allows for selecting a more conservative model, and is helpful in scenarios where the misclassification cost is even, i.e., if a person has diabetes but is misdiagnosed as non-diabetic the effect of misdiagnosis is quite high and could lead to loss of life expectancy due to no implementation of life style changes, versus if a person is non-diabetic and is misclassified as diabetic that individual would likely make lifestyle changes that would not harm them significantly moving forward, so misclassifying as non-diabetic is significantly worse than misclassifying as diabetic
 
+## Data Import and Formatting
+
+We import the data and transform all relevant variables into factors as appropriate. Additionally, we print the correlations with our response to see which variables we should likely consider in our models
 ```{r}
 data <- read.csv("~/diabetes_binary_health_indicators_BRFSS2015.csv") |>
-  mutate(Diabetes_binary = factor(Diabetes_binary,labels=c("No Diabetes","Diabetes")),HighBP=factor(HighBP,labels=c("Normal","High")),HighChol=factor(HighChol,labels=c("Normal","High")),CholCheck=factor(CholCheck,labels=c("No","Yes")),Smoker=factor(Smoker,labels=c("No","Yes")),Stroke=factor(Stroke,labels=c("No","Yes")),HeartDiseaseorAttack=factor(HeartDiseaseorAttack,labels=c("No","Yes")),PhysActivity=factor(PhysActivity,labels=c("No","Yes")),Fruits=factor(Fruits,labels=c("No","Yes")),Veggies=factor(Veggies,labels=c("No","Yes")),HvyAlcoholConsump=factor(HvyAlcoholConsump,labels=c("No","Yes")),AnyHealthcare=factor(AnyHealthcare,labels=c("No","Yes")),NoDocbcCost=factor(NoDocbcCost,labels=c("No","Yes")),GenHlth=factor(GenHlth,labels=c("Excellent","Very Good","Good","Fair","Poor")),DiffWalk=factor(DiffWalk,labels=c("No","Yes")),Sex=factor(Sex,labels=c("Female","Male")),Age=factor(Age,labels=c("18-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75-79","80 and older")),Education=factor(Education,labels=c("No school/Kindergarten","Elementary Education","Some High School","High School Graduate","Some College or Technical School","College Graduate")),Income=factor(Income,labels=c("Under $10k","$10k-$15k","$15k-$20k","$20k-$25k","$25k-$35k","$35k-$50k","$50k-$75k","Over $75k")))
+  mutate(Diabetes_binary = factor(Diabetes_binary,labels=c("Non_Diabetic","Diabetic")),HighBP=factor(HighBP,labels=c("Normal","High")),HighChol=factor(HighChol,labels=c("Normal","High")),CholCheck=factor(CholCheck,labels=c("No","Yes")),Smoker=factor(Smoker,labels=c("No","Yes")),Stroke=factor(Stroke,labels=c("No","Yes")),HeartDiseaseorAttack=factor(HeartDiseaseorAttack,labels=c("No","Yes")),PhysActivity=factor(PhysActivity,labels=c("No","Yes")),Fruits=factor(Fruits,labels=c("No","Yes")),Veggies=factor(Veggies,labels=c("No","Yes")),HvyAlcoholConsump=factor(HvyAlcoholConsump,labels=c("No","Yes")),AnyHealthcare=factor(AnyHealthcare,labels=c("No","Yes")),NoDocbcCost=factor(NoDocbcCost,labels=c("No","Yes")),GenHlth=factor(GenHlth,labels=c("Excellent","Very Good","Good","Fair","Poor")),DiffWalk=factor(DiffWalk,labels=c("No","Yes")),Sex=factor(Sex,labels=c("Female","Male")),Age=factor(Age,labels=c("18-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75-79","80 and older")),Education=factor(Education,labels=c("No school/Kindergarten","Elementary Education","Some High School","High School Graduate","Some College or Technical School","College Graduate")),Income=factor(Income,labels=c("Under $10k","$10k-$15k","$15k-$20k","$20k-$25k","$25k-$35k","$35k-$50k","$50k-$75k","Over $75k")))
 
+cor(read.csv("~/diabetes_binary_health_indicators_BRFSS2015.csv"))[,1]
+```
+Based on these correlations, we will propose three selections of variables to analyze in all model types:
+1. The full model containing all variables provided.
+2. A reduced model including all variables over an absolute correlation threshold of .1, namely, HighBP, HighChol, BMI, Stroke, HeartDiseaseorAttack, PhysActivity, GenHlth, PhysHlth, DiffWalk, Age, Education, and Income.
+3. A strict model containing all variables over an absolute correlation threshold of .2, namely, HighBP, HighChol, BMI, GenHlth, and DiffWalk.
+
+## Modeling
+
+Before delving into any specific models, we first need to split our data into a training and test set to enable evaluation, setting our seed as well so the results will be reproducible. Additionally, in each case below we center and scale our variables to be safe, although this may be unneeded based on the relatively few numeric variables all on a similar scale.
+```{r}
 set.seed(28)
+index <- createDataPartition(data$Diabetes_binary,p = 0.7,list=FALSE)
+training <- data[index,]
+test <- data[-index,]
+```
+
+#### Logistic Regression
+A logistic regression model is essentially a generalized approach that allows for the application of a linear model to binary using a link function, in this case the natural log. This allows the model to take in a linear combination of the explanatory variables, and then connect it to a response variable that does not have to follow the same support, in this case allowing the response to take on values of only 0 or 1. Additionally, for simplicity in this case (and because my computer runs slow otherwise with the size of this data set) we are not considering interaction terms or any higher order terms, but generally speaking these would be acceptable to include in a logistic regression model if desired.
+
+We fit three models as discussed - the full model, the reduced model, and the strict model. As calculating the log loss for the test data set also takes a few steps to complete, we put it in a function for ease of reproduction across all our models.
+```{r}
+logModel1 <- train(Diabetes_binary~.,data=training,method="glm",family="binomial",preProcess=c("center","scale"),trControl=trainControl(method="cv",number=5,summaryFunction = mnLogLoss, classProbs = TRUE),metric="logLoss")
+logModel2 <- train(Diabetes_binary~HighBP+HighChol+BMI+Stroke+HeartDiseaseorAttack+PhysActivity+GenHlth+PhysHlth+DiffWalk+Age+Education+Income,data=training,method="glm",family="binomial",preProcess=c("center","scale"),trControl=trainControl(method="cv",number=5,summaryFunction = mnLogLoss, classProbs = TRUE),metric="logLoss")
+logModel3 <- train(Diabetes_binary~HighBP+HighChol+BMI+GenHlth+DiffWalk,data=training,method="glm",family="binomial",preProcess=c("center","scale"),trControl=trainControl(method="cv",number=5,summaryFunction = mnLogLoss, classProbs = TRUE),metric="logLoss")
+
+logLoss <- function(model,testSet){
+  predvals <- predict(model,newdata=test,type="raw")
+  predprobs <- predict(model,newdata=test,type="prob")
+  lossTest <- data.frame(obs=test$Diabetes_binary,pred=predvals,NonDiabetic=predprobs[,1],Diabetic=predprobs[,2])
+  mnLogLoss(lossTest,lev=levels(lossTest$obs))
+}
+```
+
+Comparing our three logistic model options, we determine the full model is most effective as it minimizes log loss.
+```{r}
+logLoss(logModel1,test)
+logLoss(logModel2,test)
+logLoss(logModel3,test)
+```
+#### Classification Tree
+Next, we turn our attention to a classification tree model. The idea with a classification tree is to split up the classification space by using a Gini index or deviance, essentially finding values of explanatory variables that minimize Gini/deviance to split outcomes effectively. In addition, this model comes with an additional "complexity parameter" that we will be able to determine the optimal value of during cross validation.
+```{r}
+treeModel1 <- train(Diabetes_binary~.,data=training,method="rpart",preProcess=c("center","scale"),trControl=trainControl(method="cv",number=5,summaryFunction = mnLogLoss, classProbs = TRUE),metric="logLoss",tuneGrid=expand.grid(cp=seq(0,0.1,0.001)))
+
+treeModel2 <- train(Diabetes_binary~HighBP+HighChol+BMI+Stroke+HeartDiseaseorAttack+PhysActivity+GenHlth+PhysHlth+DiffWalk+Age+Education+Income,data=training,method="rpart",preProcess=c("center","scale"),trControl=trainControl(method="cv",number=5,summaryFunction = mnLogLoss, classProbs = TRUE),metric="logLoss",tuneGrid=expand.grid(cp=seq(0,0.1,0.001)))
+
+treeModel3 <- train(Diabetes_binary~HighBP+HighChol+BMI+GenHlth+DiffWalk,data=training,method="rpart",preProcess=c("center","scale"),trControl=trainControl(method="cv",number=5,summaryFunction = mnLogLoss, classProbs = TRUE),metric="logLoss",tuneGrid=expand.grid(cp=seq(0,0.1,0.001)))
+```
+
+In this case, we determine the best tree model to be the strict model variables, with a best tuning parameter cp=0.
+```{r}
+logLoss(treeModel1,test)
+logLoss(treeModel2,test)
+logLoss(treeModel3,test)
+
+treeModel3$bestTune
+```
+
+#### Random Forest
+Next, we turn to random forest models, which in essence is the process of fitting many classification trees to bootstrapped samples and then averaging the results across predictions. This also only includes a subset of explanatory variables in each bootstrapped sample, so that if there are particularly strong variables they will not completely overshadow other variables in every tree. This also has a tuning parameter, m, which is the number of variables included in each bootstrap sample, and which can be optimized with cross validation. Additionally, in this case the cross validation is only three fold as these models take a signficant amount of time to run, and rather than running a full model, reduced model and strict model in terms of variable selection, I am only using the strict option to save time.
+```{r}
+forestModel1 <- train(Diabetes_binary~HighBP+HighChol+BMI+GenHlth+DiffWalk,data=training,method="rf",preProcess=c("center","scale"),trControl=trainControl(method="cv",number=3,summaryFunction = mnLogLoss, classProbs = TRUE),metric="logLoss",tuneGrid=expand.grid(mtry=c(1:4)))
+```
+
+In this case, we determine the value of our tuning parameter that minimizes log loss is m=
+```{r}
+forestModel1
+```
+
+## Model Selection
+
+Finally, we can compare our best logistic regression model, tree model, and forest model to determine which is most effective, and we see that X minimizes log loss across all options
+```{r}
+logLoss(logModel1,test)
+logLoss(treeModel3,test)
+
 
 ```
 
