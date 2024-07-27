@@ -53,6 +53,6 @@
     "href": "Modeling.html#model-selection",
     "title": "Modeling",
     "section": "Model Selection",
-    "text": "Model Selection\nFinally, we can compare our best logistic regression model, tree model, and forest model to determine which is most effective, and we see that the full logistic model minimizes log loss across all options available.\n\nlogLoss(logModel1,test)\n\n  logLoss \n0.3188558 \n\nlogLoss(treeModel3,test)\n\n  logLoss \n0.3362954 \n\nlogLoss(forestModel1,test)\n\n logLoss \n0.485464"
+    "text": "Model Selection\nFinally, we can compare our best logistic regression model, tree model, and forest model to determine which is most effective, and we see that the full logistic model minimizes log loss across all options available.\n\nlogLoss(logModel1,test)\n\n  logLoss \n0.3188558 \n\nlogLoss(treeModel3,test)\n\n  logLoss \n0.3362954 \n\nlogLoss(forestModel1,test)\n\n logLoss \n0.485464 \n\n\nClick here for the EDA Page"
   }
 ]

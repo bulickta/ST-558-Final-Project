@@ -64,12 +64,13 @@ This is exploratory data analysis of diabetes data from the Behavioral Risk Fact
     -   6 = Between \$35,000 and \$50,000
     -   7 = Between \$50,000 and \$75,000
     -   8 = Above \$75,000
-    
+
 The goal of this EDA is to determine any potential variables that appear to be related to our binary diabetes response variable.
 
 ## Data Summarization and Exploration
 
 After reading in the raw data and assigning the indicator variables as meaningful factors, we check and see there are no instances of missing data in this data set.
+
 ```{r}
 
 data <- read.csv("~/diabetes_binary_health_indicators_BRFSS2015.csv") |>
@@ -79,12 +80,14 @@ colSums(is.na(data))
 ```
 
 Computing some brief summary statistics, we note that, generally speaking, there are relatively few cases of diabetics compared to non-diabetics, and we can also see some distributions of common demographic information like education, income, age, and sex.
+
 ```{r}
 summary(data)
 cor(read.csv("~/diabetes_binary_health_indicators_BRFSS2015.csv"))
 ```
 
 We then create some exploratory plots comparing the distributions of all variables compared to our response, noting some potential variable of interest in HighBP, HighChol, BMI, GenHlth, and DiffWalk, based on the high numerical correlations above and the visuals of how, for each of these variables appears to change the distribution expected diabetic vs non-diabetic.
+
 ```{r}
 gg<-ggplot(data,aes(x=Diabetes_binary))
 b <- gg+geom_count(aes(y=HighBP))+labs(x="Diabetes")
