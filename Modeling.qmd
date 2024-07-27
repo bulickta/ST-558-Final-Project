@@ -96,16 +96,18 @@ test <- data[-index,]
 #### Logistic Regression
 A logistic regression model is essentially a generalized approach that allows for the application of a linear model to binary using a link function, in this case the natural log. This allows the model to take in a linear combination of the explanatory variables, and then connect it to a response variable that does not have to follow the same support, in this case allowing the response to take on values of only 0 or 1. Additionally, for simplicity in this case (and because my computer runs slow otherwise with the size of this data set) we are not considering interaction terms or any higher order terms, but generally speaking these would be acceptable to include in a logistic regression model if desired.
 
-We fit three models as discussed - the full model, the reduced model, and the strict model. As calculating the log loss for the test data set also takes a few steps to complete, we put it in a function for ease of reproduction across all our models.
+We fit three models as discussed - the full model, the reduced model, and the strict model. 
+
+As calculating the log loss for the test data set also takes a few steps to complete, we put it in a function for ease of reproduction across all our models.
 ```{r}
 logModel1 <- train(Diabetes_binary~.,data=training,method="glm",family="binomial",preProcess=c("center","scale"),trControl=trainControl(method="cv",number=5,summaryFunction = mnLogLoss, classProbs = TRUE),metric="logLoss")
 logModel2 <- train(Diabetes_binary~HighBP+HighChol+BMI+Stroke+HeartDiseaseorAttack+PhysActivity+GenHlth+PhysHlth+DiffWalk+Age+Education+Income,data=training,method="glm",family="binomial",preProcess=c("center","scale"),trControl=trainControl(method="cv",number=5,summaryFunction = mnLogLoss, classProbs = TRUE),metric="logLoss")
 logModel3 <- train(Diabetes_binary~HighBP+HighChol+BMI+GenHlth+DiffWalk,data=training,method="glm",family="binomial",preProcess=c("center","scale"),trControl=trainControl(method="cv",number=5,summaryFunction = mnLogLoss, classProbs = TRUE),metric="logLoss")
 
 logLoss <- function(model,testSet){
-  predvals <- predict(model,newdata=test,type="raw")
-  predprobs <- predict(model,newdata=test,type="prob")
-  lossTest <- data.frame(obs=test$Diabetes_binary,pred=predvals,NonDiabetic=predprobs[,1],Diabetic=predprobs[,2])
+  predvals <- predict(model,newdata=testSet,type="raw")
+  predprobs <- predict(model,newdata=testSet,type="prob")
+  lossTest <- data.frame(obs=testSet$Diabetes_binary,pred=predvals,Non_Diabetic=predprobs[,1],Diabetic=predprobs[,2])
   mnLogLoss(lossTest,lev=levels(lossTest$obs))
 }
 ```
@@ -126,7 +128,7 @@ treeModel2 <- train(Diabetes_binary~HighBP+HighChol+BMI+Stroke+HeartDiseaseorAtt
 treeModel3 <- train(Diabetes_binary~HighBP+HighChol+BMI+GenHlth+DiffWalk,data=training,method="rpart",preProcess=c("center","scale"),trControl=trainControl(method="cv",number=5,summaryFunction = mnLogLoss, classProbs = TRUE),metric="logLoss",tuneGrid=expand.grid(cp=seq(0,0.1,0.001)))
 ```
 
-In this case, we determine the best tree model to be the strict model variables, with a best tuning parameter cp=0.
+In this case, we determine the best tree model to be the strict model variables, with a best tuning parameter as shown below.
 ```{r}
 logLoss(treeModel1,test)
 logLoss(treeModel2,test)
@@ -136,24 +138,23 @@ treeModel3$bestTune
 ```
 
 #### Random Forest
-Next, we turn to random forest models, which in essence is the process of fitting many classification trees to bootstrapped samples and then averaging the results across predictions. This also only includes a subset of explanatory variables in each bootstrapped sample, so that if there are particularly strong variables they will not completely overshadow other variables in every tree. This also has a tuning parameter, m, which is the number of variables included in each bootstrap sample, and which can be optimized with cross validation. Additionally, in this case the cross validation is only three fold as these models take a signficant amount of time to run, and rather than running a full model, reduced model and strict model in terms of variable selection, I am only using the strict option to save time.
+Next, we turn to random forest models, which in essence is the process of fitting many classification trees to bootstrapped samples and then averaging the results across predictions. This also only includes a subset of explanatory variables in each bootstrapped sample, so that if there are particularly strong variables they will not completely overshadow other variables in every tree. This also has a tuning parameter, m, which is the number of variables included in each bootstrap sample, and which can be optimized with cross validation. Additionally, in this case the cross validation is only three fold as these models take a significant amount of time to run, and rather than running a full model, reduced model and strict model in terms of variable selection, I am only using the full model in the interest of computation time.
 ```{r}
-forestModel1 <- train(Diabetes_binary~HighBP+HighChol+BMI+GenHlth+DiffWalk,data=training,method="rf",preProcess=c("center","scale"),trControl=trainControl(method="cv",number=3,summaryFunction = mnLogLoss, classProbs = TRUE),metric="logLoss",tuneGrid=expand.grid(mtry=c(1:4)))
+forestModel1 <- train(Diabetes_binary~., data=training,method="rf", preProcess=c("center","scale"), trControl=trainControl(method="cv",number=3, summaryFunction = mnLogLoss, classProbs = TRUE), metric="logLoss", tuneGrid=expand.grid(mtry=c(1:4)))
 ```
 
-In this case, we determine the value of our tuning parameter that minimizes log loss is m=
+In this case, we determine the value of our tuning parameter that minimizes log loss as noted below. I am a little concerned that I may have a bug in my code since the logLoss is so high, but alas I can't figure it out if so, and I don't have the patience to keep test running this model!
 ```{r}
 forestModel1
 ```
 
 ## Model Selection
 
-Finally, we can compare our best logistic regression model, tree model, and forest model to determine which is most effective, and we see that X minimizes log loss across all options
+Finally, we can compare our best logistic regression model, tree model, and forest model to determine which is most effective, and we see that the full logistic model minimizes log loss across all options available.
 ```{r}
 logLoss(logModel1,test)
 logLoss(treeModel3,test)
-
-
+logLoss(forestModel1,test)
 ```
 
 

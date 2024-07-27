@@ -76,14 +76,14 @@ data <- read.csv("~/diabetes_binary_health_indicators_BRFSS2015.csv") |>
   mutate(Diabetes_binary = factor(Diabetes_binary,labels=c("No Diabetes","Diabetes")),HighBP=factor(HighBP,labels=c("Normal","High")),HighChol=factor(HighChol,labels=c("Normal","High")),CholCheck=factor(CholCheck,labels=c("No","Yes")),Smoker=factor(Smoker,labels=c("No","Yes")),Stroke=factor(Stroke,labels=c("No","Yes")),HeartDiseaseorAttack=factor(HeartDiseaseorAttack,labels=c("No","Yes")),PhysActivity=factor(PhysActivity,labels=c("No","Yes")),Fruits=factor(Fruits,labels=c("No","Yes")),Veggies=factor(Veggies,labels=c("No","Yes")),HvyAlcoholConsump=factor(HvyAlcoholConsump,labels=c("No","Yes")),AnyHealthcare=factor(AnyHealthcare,labels=c("No","Yes")),NoDocbcCost=factor(NoDocbcCost,labels=c("No","Yes")),GenHlth=factor(GenHlth,labels=c("Excellent","Very Good","Good","Fair","Poor")),DiffWalk=factor(DiffWalk,labels=c("No","Yes")),Sex=factor(Sex,labels=c("Female","Male")),Age=factor(Age,labels=c("18-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75-79","80 and older")),Education=factor(Education,labels=c("No school/Kindergarten","Elementary Education","Some High School","High School Graduate","Some College or Technical School","College Graduate")),Income=factor(Income,labels=c("Under $10k","$10k-$15k","$15k-$20k","$20k-$25k","$25k-$35k","$35k-$50k","$50k-$75k","Over $75k")))
 
 colSums(is.na(data))
-
-
 ```
+
 Computing some brief summary statistics, we note that, generally speaking, there are relatively few cases of diabetics compared to non-diabetics, and we can also see some distributions of common demographic information like education, income, age, and sex.
 ```{r}
 summary(data)
 cor(read.csv("~/diabetes_binary_health_indicators_BRFSS2015.csv"))
 ```
+
 We then create some exploratory plots comparing the distributions of all variables compared to our response, noting some potential variable of interest in HighBP, HighChol, BMI, GenHlth, and DiffWalk, based on the high numerical correlations above and the visuals of how, for each of these variables appears to change the distribution expected diabetic vs non-diabetic.
 ```{r}
 gg<-ggplot(data,aes(x=Diabetes_binary))
