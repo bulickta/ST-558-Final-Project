@@ -156,10 +156,3 @@ logLoss(logModel1,test)
 logLoss(treeModel3,test)
 logLoss(forestModel1,test)
 ```
-
-
-
-
-
-
-
