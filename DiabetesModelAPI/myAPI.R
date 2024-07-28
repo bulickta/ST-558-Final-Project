@@ -85,7 +85,7 @@ function(HighBP = commonFacts[2], HighChol = commonFacts[3], CholCheck = commonF
 
 #Query pred with defaults (should give "non-diabetic"): http://localhost:8000/pred
 #Query pred with custom settings that give a "diabetics" outcome: http://localhost:8000/pred?HighBP=High&HighChol=High&CholCheck=Yes&BMI=40&Smoker=Yes&Stroke=No&HeartDiseaseorAttack=No&PhysActivity=No&Fruits=Yes&Veggies=Yes&HvyAlcoholConsump=No&AnyHealthcare=Yes&NoDocbcCost=No&GenHlth=Poor&MentHlth=15&PhysHlth=30&DiffWalk=Yes&Sex=Female&Age=80%20and%20older&Education=No%20school%2FKindergarten&Income=Under%20%2410k
-#Query pred with cutsom settings that give a "non-diabteic" outcome: http://localhost:8000/pred?HighBP=High&HighChol=High&CholCheck=No&BMI=40&Smoker=Yes&Stroke=Yes&HeartDiseaseorAttack=Yes&PhysActivity=No&Fruits=Yes&Veggies=Yes&HvyAlcoholConsump=Yes&AnyHealthcare=No&NoDocbcCost=No&GenHlth=Poor&MentHlth=20&PhysHlth=20&DiffWalk=Yes&Sex=Female&Age=18-24&Education=No%20school%2FKindergarten&Income=Under%20%2410k
+#Query pred with custom settings that give a "non-diabetic" outcome: http://localhost:8000/pred?HighBP=High&HighChol=High&CholCheck=No&BMI=40&Smoker=Yes&Stroke=Yes&HeartDiseaseorAttack=Yes&PhysActivity=No&Fruits=Yes&Veggies=Yes&HvyAlcoholConsump=Yes&AnyHealthcare=No&NoDocbcCost=No&GenHlth=Poor&MentHlth=20&PhysHlth=20&DiffWalk=Yes&Sex=Female&Age=18-24&Education=No%20school%2FKindergarten&Income=Under%20%2410k
 
 
 #* Information Endpoint
